@@ -1,0 +1,56 @@
+import requests
+from bs4 import BeautifulSoup
+import time
+from datetime import datetime
+import os
+
+TOKEN = os.getenv("8748562438:AAEWDwksmnHdeb03SlUurMf9a4E1SE9HQWU")
+CHAT_ID = os.getenv("pengumumanKP2MI_bot")
+
+URL = "https://www.kp2mi.go.id/gtog-korea/pengumuman"
+
+def kirim_telegram(pesan):
+    url = f"https://api.telegram.org/bot{8748562438:AAEWDwksmnHdeb03SlUurMf9a4E1SE9HQWU}/sendMessage"
+    data = {"chat_id": 
+pengumumanKP2MI_bot, "text": pesan}
+    requests.post(url, data=data)
+
+def dalam_jam_kerja():
+    jam = datetime.utcnow().hour + 7
+    return 8 <= jam < 17
+
+def ambil_pengumuman():
+    res = requests.get(URL)
+    soup = BeautifulSoup(res.text, "html.parser")
+
+    rows = soup.select("table tbody tr")
+    hasil = []
+
+    for row in rows:
+        kolom = row.find_all("td")
+        if len(kolom) > 0:
+            judul = kolom[0].text.strip()
+            hasil.append(judul)
+
+    return hasil
+
+data_lama = []
+
+while True:
+    try:
+        if dalam_jam_kerja():
+            data_baru = ambil_pengumuman()
+            baru = [x for x in data_baru if x not in data_lama]
+
+            if baru:
+                pesan = "🚨 PENGUMUMAN BARU KP2MI 🚨\n\n"
+                pesan += "\n".join(baru[:5])
+                kirim_telegram(pesan)
+
+                data_lama = data_baru
+
+        time.sleep(300)
+
+    except Exception as e:
+        print(e)
+        time.sleep(60)
